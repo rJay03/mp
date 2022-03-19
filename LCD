@@ -1,0 +1,72 @@
+#include <lpc17xx.h> 
+#include <STRING.H>
+
+void DELAY(unsigned int);
+void INIT_GPIO(void);
+void LCDSTR(unsigned char ADDRESS,char *MSG);
+void LCD_DATA(unsigned int);
+void LCD_CMD(unsigned int);
+void LCD_INIT(void);
+ 
+int main() 
+{         
+  INIT_GPIO();
+  LCD_INIT();
+  while(1)
+   { 
+      LCDSTR(0x80,"NMIT ");
+      LCDSTR(0xC0,"   Bangalore    ");
+	  DELAY(1000);  	
+      LCDSTR(0x80,"CortexM3 Trainer");
+      LCDSTR(0xC0,"   Kit LPC1768  ");
+	  DELAY(1000);  	  
+   }	    
+}
+
+void DELAY(unsigned int VALUE)
+  {
+     unsigned int i,j;
+     for(i=0;i<VALUE;i++)
+	  {
+		for(j=1;j<1200;j++);
+	  }
+  }
+
+void INIT_GPIO()
+  {	
+      LPC_GPIO1->FIODIR = 0x03FF8000;
+	  LPC_GPIO0->FIODIR = 0xFFFFFFC3;           	
+  }
+
+void LCD_DATA(unsigned int VALUE)
+  {	            
+     VALUE = VALUE<<18;	
+	 LPC_GPIO1->FIOPIN = (0x00028000|VALUE); 
+	 DELAY(5);
+	 LPC_GPIO1->FIOPIN = (0x00008000|VALUE);
+  }	 
+void LCD_CMD(unsigned int LCMD)
+  {    
+     LCMD = LCMD<<18;   
+     LPC_GPIO1->FIOPIN = (0x00020000|LCMD);
+	 DELAY(5);
+     LPC_GPIO1->FIOPIN = (0x00000000|LCMD);
+  }
+void LCDSTR(unsigned char ADDRESS,char *MSG)
+    {	          
+     unsigned char COUNT,LENGTH;
+	 LCD_CMD(ADDRESS);
+     LENGTH = strlen(MSG);
+         for(COUNT=0;COUNT<LENGTH;COUNT++)
+           {
+              LCD_DATA(*MSG); 				  
+              MSG++;
+           }
+    }
+void LCD_INIT()
+  {	
+     LCD_CMD(0x38);
+     LCD_CMD(0x0C);
+     LCD_CMD(0x01);
+     LCD_CMD(0x06);
+  }
